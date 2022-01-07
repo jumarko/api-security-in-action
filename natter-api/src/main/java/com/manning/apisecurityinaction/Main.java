@@ -15,6 +15,8 @@ public class Main {
         final JdbcConnectionPool datasource = JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter", "password");
         final Database database = Database.forDataSource(datasource);
         createTables(database);
+
+        new WebApp(database).init();
     }
 
     private static void createTables(Database database) throws URISyntaxException, IOException {

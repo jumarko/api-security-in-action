@@ -25,7 +25,7 @@ public class SpaceController {
         }
         if (!owner.matches("[a-zA-Z][a-zA-Z0-9]{1,29}")) {
             // note that echoing back the username might not be the best idea - see later in the book
-            throw new IllegalArgumentException("invalid username: " + owner);
+            throw new IllegalArgumentException("invalid username");
         }
 
         return database.withTransaction(tx -> {

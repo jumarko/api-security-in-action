@@ -42,6 +42,16 @@ public class WebApp {
 
         // don't leak internal server info
         Spark.afterAfter((request, response) -> response.header("Server", ""));
+
+        // SECURITY HEADERS
+        Spark.afterAfter(((request, response) -> {
+            response.header("X-Content-Type-Options", "no-sniff");
+            response.header("X-Frame-Options", "DENY");
+            // disable XSS protection since it has some vulnerabilities on its own
+            response.header("X-XSS-Protection", "0");
+            response.header("Cache-Control", "no-store");
+            response.header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; sandbox");
+        }));
     }
 
     private static <T extends Exception> void badRequest(Exception e, Request request, Response response) {

@@ -1,6 +1,10 @@
 package com.manning.apisecurityinaction;
 
+import org.dalesbred.result.EmptyResultException;
+import org.json.JSONException;
 import org.json.JSONObject;
+import spark.Request;
+import spark.Response;
 import spark.Spark;
 
 import com.manning.apisecurityinaction.controllers.SpaceController;
@@ -31,5 +35,14 @@ public class WebApp {
         Spark.internalServerError(new JSONObject()
                 .put("error", "internal server error").toString());
         Spark.notFound(new JSONObject("error", "not found").toString());
+
+        Spark.exception(IllegalArgumentException.class, WebApp::badRequest);
+        Spark.exception(JSONException.class, WebApp::badRequest);
+        Spark.exception(EmptyResultException.class, (e, request, response) -> response.status(404));
+    }
+
+    private static <T extends Exception> void badRequest(Exception e, Request request, Response response) {
+        response.status(400);
+        response.body(String.format("{\"error\": \"%s\"}", e));
     }
 }

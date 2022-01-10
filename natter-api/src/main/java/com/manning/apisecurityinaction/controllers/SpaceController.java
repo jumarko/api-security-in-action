@@ -20,6 +20,14 @@ public class SpaceController {
         var spaceName = json.getString("name");
         var owner = json.getString("owner");
 
+        if (spaceName.length() > 255) {
+            throw new IllegalArgumentException("space name too long");
+        }
+        if (!owner.matches("[a-zA-Z][a-zA-Z0-9]{1,29}")) {
+            // note that echoing back the username might not be the best idea - see later in the book
+            throw new IllegalArgumentException("invalid username: " + owner);
+        }
+
         return database.withTransaction(tx -> {
             var spaceId = database.findUniqueLong("SELECT NEXT VALUE FOR space_id_seq;");
             // WARNING: SQL injection vulnerability - will be fixed later

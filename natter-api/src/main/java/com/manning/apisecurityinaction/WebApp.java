@@ -22,8 +22,10 @@ public class WebApp {
 
         Spark.post("/spaces", spaceController::createSpace);
 
-        // TODO: in the book they use just after() but I think it should be afterAfter()
+        // In the book they first use after() but it should be afterAfter()
+        // otherwise you'll get text/html content type for error responses
         // -> see page 37 about Content-Type
+        // This commit fixes it anyway: https://github.com/NeilMadden/apisecurityinaction/commit/067b05a72fe8ed92b09d545912e8a33f8a909ab5#diff-eae019c32d4ba4dda402c532030540ae66b80cc7f7687fe353766126427d5814
         Spark.afterAfter(((request, response) -> response.type("application/json")));
 
         Spark.internalServerError(new JSONObject()

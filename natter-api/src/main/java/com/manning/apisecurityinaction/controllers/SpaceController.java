@@ -23,8 +23,8 @@ public class SpaceController {
         return database.withTransaction(tx -> {
             var spaceId = database.findUniqueLong("SELECT NEXT VALUE FOR space_id_seq;");
             // WARNING: SQL injection vulnerability - will be fixed later
-            database.updateUnique(String.format("INSERT INTO spaces(space_id, name, owner) VALUES ('%d', '%s', '%s')",
-                    spaceId, spaceName, owner));
+            database.updateUnique("INSERT INTO spaces(space_id, name, owner) VALUES (?, ?, ?)",
+                    spaceId, spaceName, owner);
             response.status(201);
             var spaceUri = "/spaces/" + spaceId;
             response.header("Location", spaceUri);

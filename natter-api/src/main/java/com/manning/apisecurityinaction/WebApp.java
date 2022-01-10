@@ -46,6 +46,6 @@ public class WebApp {
 
     private static <T extends Exception> void badRequest(Exception e, Request request, Response response) {
         response.status(400);
-        response.body(String.format("{\"error\": \"%s\"}", e));
+        response.body(String.format("{\"error\": \"%s\"}", e.getMessage()));
     }
 }

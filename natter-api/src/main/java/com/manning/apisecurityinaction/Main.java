@@ -12,11 +12,11 @@ import java.nio.file.Path;
 public class Main {
 
     public static void main(String[] args) throws URISyntaxException, IOException {
-        final JdbcConnectionPool datasource = JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter", "password");
-        final Database database = Database.forDataSource(datasource);
-        createTables(database);
+        // first populate the schema with elevated permissions
+        createTables(Database.forDataSource(JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter", "password")));
 
-        new WebApp(database).init();
+        // now create a new datasource with restricted user
+        new WebApp(Database.forDataSource(JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter_api_user", "password"))).init();
     }
 
     private static void createTables(Database database) throws URISyntaxException, IOException {

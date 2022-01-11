@@ -1,6 +1,7 @@
 package com.manning.apisecurityinaction;
 
 import com.google.common.util.concurrent.RateLimiter;
+import com.manning.apisecurityinaction.controllers.UserController;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,11 +35,15 @@ public class WebApp {
     }
 
     public void init() {
-        var spaceController = new SpaceController(database);
-
         setupRateLimiting(2);
 
+        var spaceController = new SpaceController(database);
         Spark.post("/spaces", spaceController::createSpace);
+
+        var userController = new UserController(database);
+        Spark.post("/users", userController::registerUser);
+
+        Spark.before(userController::authenticate);
 
         // In the book they first use after() but it should be afterAfter()
         // otherwise you'll get text/html content type for error responses

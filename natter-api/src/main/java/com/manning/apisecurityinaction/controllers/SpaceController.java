@@ -22,7 +22,7 @@ public class SpaceController {
 
         var subject = request.attribute("subject");
         if (!owner.equals(subject)) {
-            throw new IllegalArgumentException("owner must match authentication users");
+            throw new IllegalArgumentException("owner must match authenticated user");
         }
 
         if (spaceName.length() > 255) {

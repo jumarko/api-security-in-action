@@ -1,5 +1,6 @@
 package com.manning.apisecurityinaction;
 
+import com.google.common.util.concurrent.RateLimiter;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,8 +22,21 @@ public class WebApp {
         this.database = database;
     }
 
+    private void setupRateLimiting(int maxRequestsPerSecond) {
+        var rateLimiter = RateLimiter.create(maxRequestsPerSecond);
+        Spark.before(((request, response) -> {
+            if (!rateLimiter.tryAcquire()) {
+                response.header("Retry-After", "2");
+                // this throws an exception so no further statements are executed in the init method
+                Spark.halt(429);
+            }
+        }));
+    }
+
     public void init() {
         var spaceController = new SpaceController(database);
+
+        setupRateLimiting(2);
 
         Spark.post("/spaces", spaceController::createSpace);
 

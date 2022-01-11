@@ -1,5 +1,7 @@
 package com.manning.apisecurityinaction;
 
+import com.google.common.util.concurrent.RateLimiter;
+import com.manning.apisecurityinaction.controllers.UserController;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,10 +23,27 @@ public class WebApp {
         this.database = database;
     }
 
-    public void init() {
-        var spaceController = new SpaceController(database);
+    private void setupRateLimiting(int maxRequestsPerSecond) {
+        var rateLimiter = RateLimiter.create(maxRequestsPerSecond);
+        Spark.before(((request, response) -> {
+            if (!rateLimiter.tryAcquire()) {
+                response.header("Retry-After", "2");
+                // this throws an exception so no further statements are executed in the init method
+                Spark.halt(429);
+            }
+        }));
+    }
 
+    public void init() {
+        setupRateLimiting(2);
+
+        var spaceController = new SpaceController(database);
         Spark.post("/spaces", spaceController::createSpace);
+
+        var userController = new UserController(database);
+        Spark.post("/users", userController::registerUser);
+
+        Spark.before(userController::authenticate);
 
         // In the book they first use after() but it should be afterAfter()
         // otherwise you'll get text/html content type for error responses

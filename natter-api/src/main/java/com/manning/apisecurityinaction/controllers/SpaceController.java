@@ -20,6 +20,11 @@ public class SpaceController {
         var spaceName = json.getString("name");
         var owner = json.getString("owner");
 
+        var subject = request.attribute("subject");
+        if (!owner.equals(subject)) {
+            throw new IllegalArgumentException("owner must match authenticated user");
+        }
+
         if (spaceName.length() > 255) {
             throw new IllegalArgumentException("space name too long");
         }

@@ -1,7 +1,6 @@
 package com.manning.apisecurityinaction;
 
 import org.dalesbred.Database;
-import org.dalesbred.result.ResultSetProcessor;
 import org.h2.jdbcx.JdbcConnectionPool;
 
 import java.io.IOException;

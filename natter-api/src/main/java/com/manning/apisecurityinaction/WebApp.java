@@ -24,6 +24,12 @@ public class WebApp {
     }
 
     private void setupRateLimiting(int maxRequestsPerSecond) {
+
+        // server the development site over HTTPS
+        // - the certificate was generated via mkcert tool: https://github.com/FiloSottile/mkcert
+        //       mkcert -pkcs12 localhost
+        Spark.secure("localhost.p12", "changeit", null, null);
+
         var rateLimiter = RateLimiter.create(maxRequestsPerSecond);
         Spark.before(((request, response) -> {
             if (!rateLimiter.tryAcquire()) {

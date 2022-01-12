@@ -40,3 +40,12 @@ CREATE TABLE audit_log(
 );
 CREATE SEQUENCE audit_id_seq;
 GRANT SELECT, INSERT ON audit_log TO natter_api_user;
+
+CREATE TABLE permissions(
+    space_id INT NOT NULL REFERENCES spaces(space_id),
+    user_id VARCHAR(30) NOT NULL REFERENCES users(user_id),
+    -- perms are: 'r' for "read", 'w' for "write", 'd' for "delete"
+    perms VARCHAR(3) NOT NULL,
+    PRIMARY KEY (space_id, user_id)
+);
+GRANT SELECT, INSERT ON permissions TO natter_api_user;

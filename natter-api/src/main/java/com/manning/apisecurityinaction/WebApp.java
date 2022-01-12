@@ -50,12 +50,16 @@ public class WebApp {
         var userController = new UserController(database);
         Spark.post("/users", userController::registerUser);
 
+        // authentication
         Spark.before(userController::authenticate);
 
         var auditController = new AuditController(database);
         Spark.before((auditController::auditRequestStart));
         Spark.afterAfter((auditController::auditRequestEnd));
         Spark.get("/logs", auditController::readAuditLog);
+
+        // require authentication for all /spaces requests
+        Spark.before("/spaces", userController::requireAuthentication);
 
         // In the book they first use after() but it should be afterAfter()
         // otherwise you'll get text/html content type for error responses

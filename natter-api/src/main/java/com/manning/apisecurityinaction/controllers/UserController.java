@@ -5,6 +5,7 @@ import org.dalesbred.Database;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
+import spark.Spark;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -52,6 +53,12 @@ public class UserController {
         }
     }
 
+    public void requireAuthentication(Request request, Response response) {
+        if (request.attribute("subject") == null) {
+            response.header("WWW-Authenticate", "Basic realm=\"/\", charset=\"UTF-8\"");
+            Spark.halt(401);
+        }
+    }
 
     public JSONObject registerUser(Request request, Response response) {
         var json = new JSONObject(request.body());

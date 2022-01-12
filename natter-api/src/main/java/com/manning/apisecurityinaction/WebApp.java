@@ -2,6 +2,7 @@ package com.manning.apisecurityinaction;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.manning.apisecurityinaction.controllers.AuditController;
+import com.manning.apisecurityinaction.controllers.ModeratorController;
 import com.manning.apisecurityinaction.controllers.UserController;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
@@ -45,10 +46,8 @@ public class WebApp {
         setupRateLimiting(2);
 
         var spaceController = new SpaceController(database);
-        Spark.post("/spaces", spaceController::createSpace);
 
         var userController = new UserController(database);
-        Spark.post("/users", userController::registerUser);
 
         // authentication
         Spark.before(userController::authenticate);
@@ -58,8 +57,26 @@ public class WebApp {
         Spark.afterAfter((auditController::auditRequestEnd));
         Spark.get("/logs", auditController::readAuditLog);
 
-        // require authentication for all /spaces requests
+
+
+        // require authentication for all /spaces requests          
         Spark.before("/spaces", userController::requireAuthentication);
+        Spark.post("/spaces", spaceController::createSpace);
+        // only users with write permission can post messages
+        Spark.before("/spaces/:spaceId/messages", userController.requirePermissions("POST", "w"));
+        Spark.post("/spaces/:spaceId/messages", spaceController::postMessage);
+
+        // only users with read permissions can read messages
+        Spark.before("/spaces/:spaceId/messages", userController.requirePermissions("GET", "r"));
+        Spark.get("/spaces/:spaceId/messages/:msgId", spaceController::readMessage);
+        Spark.before("/spaces/:spaceId/messages/*", userController.requirePermissions("GET", "r"));
+        Spark.get("/spaces/:spaceId/messages", spaceController::findMessages);
+
+        var moderatorController = new ModeratorController(database);
+        Spark.before("/spaces/:spaceId/messages/:msgId", userController.requirePermissions("DELETE", "d"));
+        Spark.delete("/spaces/:spaceId/messages/:msgId", moderatorController::deletePost);
+
+        Spark.post("/users", userController::registerUser);
 
         // In the book they first use after() but it should be afterAfter()
         // otherwise you'll get text/html content type for error responses

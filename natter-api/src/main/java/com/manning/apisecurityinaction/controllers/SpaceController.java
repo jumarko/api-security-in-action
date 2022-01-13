@@ -68,7 +68,6 @@ public class SpaceController {
     public JSONObject addMember(Request request, Response response) {
         var requestJson = new JSONObject(request.body());
         var spaceId = Long.parseLong(request.params(":spaceId"));
-        // TODO: maybe check that such a user exists?
         var userToAdd = requestJson.getString("username");
         var perms = requestJson.getString("permissions");
 

@@ -78,6 +78,11 @@ public class WebApp {
 
         Spark.post("/users", userController::registerUser);
 
+        // WARNING: possible privilege escalation attack
+        Spark.before("/spaces/:spaceId/members", userController.requirePermissions("POST", "r"));
+        Spark.post("/spaces/:spaceId/members", spaceController::addMember);
+
+
         // In the book they first use after() but it should be afterAfter()
         // otherwise you'll get text/html content type for error responses
         // -> see page 37 about Content-Type

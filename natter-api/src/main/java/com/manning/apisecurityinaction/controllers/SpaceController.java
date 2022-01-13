@@ -5,6 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
+import spark.utils.StringUtils;
 
 import java.sql.SQLException;
 import java.time.Instant;
@@ -17,6 +18,15 @@ public class SpaceController {
 
     public SpaceController(Database database) {
         this.database = database;
+    }
+
+    /**
+     * Adds permissions for given username.
+     * Permissions are: 'r' for "read", 'w' for "write", 'd' for "delete".
+     */
+    private void addPermissions(long spaceId, String username, String permissions) {
+        database.updateUnique("INSERT INTO permissions(space_id, user_id, perms) VALUES(?, ?, ?)",
+                    spaceId, username, permissions);
     }
 
     public JSONObject createSpace(Request request, Response response) {
@@ -45,9 +55,7 @@ public class SpaceController {
                     spaceId, spaceName, owner);
 
             // give full permissions to the space owner
-            // perms are: 'r' for "read", 'w' for "write", 'd' for "delete"
-            database.updateUnique("INSERT INTO permissions(space_id, user_id, perms) VALUES(?, ?, ?)",
-                    spaceId, owner, "rwd");
+            addPermissions(spaceId, owner, "rwd");
 
             response.status(201);
             var spaceUri = "/spaces/" + spaceId;
@@ -57,6 +65,24 @@ public class SpaceController {
 
     }
 
+    public JSONObject addMember(Request request, Response response) {
+        var requestJson = new JSONObject(request.body());
+        var spaceId = Long.parseLong(request.params(":spaceId"));
+        var userToAdd = requestJson.getString("username");
+        var perms = requestJson.getString("permissions");
+
+        if (StringUtils.isBlank(perms) || !perms.matches("r?w?d?")) {
+            throw new IllegalArgumentException("invalid perissions");
+        }
+
+        // WARNING: possible privilege escalation attack!
+        addPermissions(spaceId, userToAdd, perms);
+
+        response.status(200);
+        return new JSONObject()
+                .put("username", userToAdd)
+                .put("permissions", perms);
+    }
 
     // Additional REST API endpoints not covered in the book:
     // - available here: https://github.com/NeilMadden/apisecurityinaction/tree/chapter03/natter-api/src/main/java/com/manning/apisecurityinaction/controller

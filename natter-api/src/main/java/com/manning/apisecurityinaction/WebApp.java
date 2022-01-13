@@ -78,8 +78,8 @@ public class WebApp {
 
         Spark.post("/users", userController::registerUser);
 
-        // WARNING: possible privilege escalation attack
-        Spark.before("/spaces/:spaceId/members", userController.requirePermissions("POST", "r"));
+        // notice we require 'rwd' permissions to avoid _privilege escalation_ attacks
+        Spark.before("/spaces/:spaceId/members", userController.requirePermissions("POST", "rwd"));
         Spark.post("/spaces/:spaceId/members", spaceController::addMember);
 
 

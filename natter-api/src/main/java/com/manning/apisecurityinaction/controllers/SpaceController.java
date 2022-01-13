@@ -82,6 +82,7 @@ public class SpaceController {
         }
 
         // WARNING: possible privilege escalation attack!
+        // It is mitigated by requiring full permissions for calling addMember endpoint
         addPermissions(spaceId, userToAdd, perms);
 
         response.status(200);

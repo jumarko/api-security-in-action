@@ -68,8 +68,15 @@ public class SpaceController {
     public JSONObject addMember(Request request, Response response) {
         var requestJson = new JSONObject(request.body());
         var spaceId = Long.parseLong(request.params(":spaceId"));
+        // TODO: maybe check that such a user exists?
         var userToAdd = requestJson.getString("username");
         var perms = requestJson.getString("permissions");
+
+        if (database.findOptional(String.class,
+                "SELECT user_id FROM users WHERE user_id=?", userToAdd)
+                .isEmpty()) {
+            throw new IllegalArgumentException("User does not exist");
+        }
 
         if (StringUtils.isBlank(perms) || !perms.matches("r?w?d?")) {
             throw new IllegalArgumentException("invalid perissions");

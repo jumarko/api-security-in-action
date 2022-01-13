@@ -43,7 +43,7 @@ public class WebApp {
     }
 
     public void init() {
-        setupRateLimiting(2);
+        setupRateLimiting(5);
 
         var spaceController = new SpaceController(database);
 

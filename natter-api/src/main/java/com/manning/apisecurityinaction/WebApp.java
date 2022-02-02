@@ -43,6 +43,11 @@ public class WebApp {
     }
 
     public void init() {
+
+        // serve static files like nater.js & natter.html saved in src/main/resources/public
+        // this must be done before any route mapping has begun 
+        Spark.staticFiles.location("/public");
+
         setupRateLimiting(5);
 
         var spaceController = new SpaceController(database);

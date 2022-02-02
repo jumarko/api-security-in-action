@@ -15,7 +15,7 @@ function createSpace(name, owner) {
       if (response.ok) {
         return response.json();
       } else {
-        throw Error(response.statusText);
+        throw Error(response.statusText + ": " + response.text().then(alert));
       }
     })
     .then(json => console.log('Created space: ', json.name, json.uri))

@@ -47,6 +47,12 @@ public class SpaceController {
             throw new IllegalArgumentException("invalid username");
         }
 
+        // my custom additon for better error message in the browser
+        var space = database.findOptional(String.class, "SELECT name from spaces WHERE name = ?", spaceName);
+        if (space.isPresent()) {
+            throw new IllegalArgumentException("Space already exists! You must provide a unique space name");
+        }
+
         return database.withTransaction(tx -> {
             var spaceId = database.findUniqueLong("SELECT NEXT VALUE FOR space_id_seq;");
 

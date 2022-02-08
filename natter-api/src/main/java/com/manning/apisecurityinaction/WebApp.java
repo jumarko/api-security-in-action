@@ -3,7 +3,9 @@ package com.manning.apisecurityinaction;
 import com.google.common.util.concurrent.RateLimiter;
 import com.manning.apisecurityinaction.controllers.AuditController;
 import com.manning.apisecurityinaction.controllers.ModeratorController;
+import com.manning.apisecurityinaction.controllers.TokenController;
 import com.manning.apisecurityinaction.controllers.UserController;
+import com.manning.apisecurityinaction.token.CookieTokenStore;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,6 +56,9 @@ public class WebApp {
 
         var userController = new UserController(database);
 
+        // TODO: replace null with proper TokenStorage implementation once we have it
+        var tokenController = new TokenController(new CookieTokenStore());
+
         // authentication
         Spark.before(userController::authenticate);
 
@@ -62,7 +67,8 @@ public class WebApp {
         Spark.afterAfter((auditController::auditRequestEnd));
         Spark.get("/logs", auditController::readAuditLog);
 
-
+        Spark.before("/sessions", userController::requireAuthentication);
+        Spark.post("/sessions", tokenController::login);
 
         // require authentication for all /spaces requests          
         Spark.before("/spaces", userController::requireAuthentication);

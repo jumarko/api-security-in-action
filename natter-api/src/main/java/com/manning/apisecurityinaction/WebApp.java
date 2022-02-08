@@ -55,8 +55,7 @@ public class WebApp {
         var spaceController = new SpaceController(database);
 
         var userController = new UserController(database);
-
-        // TODO: replace null with proper TokenStorage implementation once we have it
+        
         var tokenController = new TokenController(new CookieTokenStore());
 
         // authentication

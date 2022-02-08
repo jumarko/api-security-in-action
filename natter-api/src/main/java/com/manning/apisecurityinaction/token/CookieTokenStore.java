@@ -11,8 +11,15 @@ public class CookieTokenStore implements TokenStore {
 
     @Override
     public String create(Request request, Token token) {
-        // WARNING: session fixation vulnerability
-        var session = request.session(true);
+        // To avoid session fixation attacks, we first check if the session is already present
+        // and invalidate it if it exists
+        var session = request.session(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        // ... then create a completely new session
+        session = request.session(true);
+
         // store token attributes in session's attributes
         session.attribute("username", token.username());
         session.attribute("expiry", token.expiry());

@@ -37,4 +37,14 @@ public class TokenController {
         response.status(201);
         return new JSONObject().put("token", tokenId);
     }
+    
+    public void validateToken(Request request, Response response) {
+        // WARNING: CSRF attack possible!
+        tokenStore.read(request, null).ifPresent(token -> {
+            if (Instant.now().isBefore(token.expiry())) {
+                request.attribute("subject", token.username());
+                token.attributes().forEach(request::attribute);
+            }
+        });
+    }
 }

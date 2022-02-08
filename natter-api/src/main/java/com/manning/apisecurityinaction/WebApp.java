@@ -61,6 +61,7 @@ public class WebApp {
 
         // authentication
         Spark.before(userController::authenticate);
+        Spark.before(tokenController::validateToken);
 
         var auditController = new AuditController(database);
         Spark.before((auditController::auditRequestStart));

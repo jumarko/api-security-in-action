@@ -42,11 +42,22 @@ public class TokenController {
         // WARNING: CSRF attack possible!
         var tokenId = request.headers("X-CSRF-Token");
         if (tokenId == null) return;
+        
         tokenStore.read(request, tokenId).ifPresent(token -> {
             if (Instant.now().isBefore(token.expiry())) {
                 request.attribute("subject", token.username());
                 token.attributes().forEach(request::attribute);
             }
         });
+    }
+
+    public JSONObject logout(Request request, Response response) {
+        var tokenId = request.headers("X-CSRF-Token");
+        if (tokenId == null) {
+            throw new IllegalArgumentException("Missing token header");
+        }
+        tokenStore.revoke(request, tokenId);
+        response.status(200);
+        return new JSONObject();
     }
 }

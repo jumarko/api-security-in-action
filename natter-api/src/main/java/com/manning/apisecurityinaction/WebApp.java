@@ -69,6 +69,7 @@ public class WebApp {
 
         Spark.before("/sessions", userController::requireAuthentication);
         Spark.post("/sessions", tokenController::login);
+        Spark.delete("/sessions", tokenController::logout);
 
         // require authentication for all /spaces requests          
         Spark.before("/spaces", userController::requireAuthentication);

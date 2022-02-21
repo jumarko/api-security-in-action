@@ -1,6 +1,7 @@
 package com.manning.apisecurityinaction.token;
 
 import spark.Request;
+import spark.Session;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -33,22 +34,39 @@ public class CookieTokenStore implements TokenStore {
 
     @Override
     public Optional<Token> read(Request request, String tokenId) {
-        var session = request.session(false); // pass false to check if valid session is present
+        var session = request.session(false); // pass false to check if valid session is presente
         if (session == null) {
             return Optional.empty();
         } else {
-            // the provided token is expected to be Base64-encoded version of SHA256 of session token
-            var providedToken = Base64Url.decode(tokenId);
-            var computedToken =  sha256(session.id());
-            if (!MessageDigest.isEqual(providedToken, computedToken)) {
-                // somebody is trying to forge the token?
+            if (!isValidToken(tokenId, session)) {
                 return Optional.empty();
             }
-
             var token = new TokenStore.Token(session.attribute("expiry"), session.attribute("username"));
             token.attributes().putAll(session.attribute("attrs"));
             return Optional.of(token);
         }
+    }
+
+    private boolean isValidToken(String tokenId, Session session) {
+        // the provided anti-CSRF token is expected to be Base64-encoded version of SHA256 of session token
+        var providedToken = Base64Url.decode(tokenId);
+        var computedToken =  sha256(session.id());
+        if (!MessageDigest.isEqual(providedToken, computedToken)) {
+            // somebody is trying to forge the token?
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public void revoke(Request request, String tokenId) {
+        var session = request.session(false);
+        // it's a good practice to check anti-CSRF token on logouts too
+        // - otherwise an attacker might logout a valid user's session (not a huge deal but annoying)
+        if (!isValidToken(tokenId, session)) {
+            return;
+        }
+        session.invalidate();
     }
 
     static byte[] sha256(String tokenId) {

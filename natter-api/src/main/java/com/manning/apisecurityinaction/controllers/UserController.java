@@ -78,7 +78,10 @@ public class UserController {
 
     public void requireAuthentication(Request request, Response response) {
         if (request.attribute("subject") == null) {
-            response.header("WWW-Authenticate", "Basic realm=\"/\", charset=\"UTF-8\"");
+            // Skip 'WWW-Authenticate' header to avoid ugly browser popups
+            // Note: technically, this is a violation of the RFC: https://datatracker.ietf.org/doc/html/rfc7235#section-3.1
+            // - however, this patter is widespread
+            // response.header("WWW-Authenticate", "Basic realm=\"/\", charset=\"UTF-8\"");
             Spark.halt(401);
         }
     }

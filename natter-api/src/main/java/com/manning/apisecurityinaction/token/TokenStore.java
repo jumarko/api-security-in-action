@@ -16,6 +16,8 @@ public interface TokenStore {
 
     Optional<Token> read(Request request, String tokenId);
 
+    void revoke(Request request, String tokenId);
+
     record Token(Instant expiry, String username, Map<String, String> attributes) {
         public Token(Instant expiry, String username) {
             this(expiry, username, new ConcurrentHashMap<>());

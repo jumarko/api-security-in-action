@@ -1,14 +1,11 @@
 const apiUrl = 'https://localhost:4567'
 
-function createSpace(name, owner) {
-  const data = {name, owner};
-  // csrtToken cookie is set upon successful login - see login.js
+function logout() {
   const crsfToken = getCookie("csrfToken");
 
-  fetch(apiUrl  + '/spaces', {
-    method: 'POST',
+  fetch(apiUrl  + '/sessions', {
+    method: 'DELETE',
     credentials: 'include',
-    body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json',
       // make sure to include anti-CSRF token in the header
@@ -25,21 +22,14 @@ function createSpace(name, owner) {
         throw Error(response.statusText + ": " + response.text().then(alert));
       }
     })
-    .then(json => console.log('Created space: ', json.name, json.uri))
+    .then(json => alert('Logged out.'))
     .catch(error => console.error('Error: ', error));
 }
 
 window.addEventListener('load', function(e) {
-  document.getElementById('createSpace').addEventListener('submit', processFormSubmit);
-})
-
-function processFormSubmit(e) {
-  e.preventDefault(); // suppres default browser behavior (submitting the form)
-  const spaceName = document.getElementById('spaceName').value;
-  const owner = document.getElementById('owner').value;
-  createSpace(spaceName, owner);
-  return false; // prevent further event processing
-}
+  // https://www.w3schools.com/jsref/met_element_addeventlistener.asp
+  document.getElementById('logout-button').addEventListener('click', logout);
+});
 
 function getCookie(cookieName) {
   const cookieValue = document.cookie.split(';')

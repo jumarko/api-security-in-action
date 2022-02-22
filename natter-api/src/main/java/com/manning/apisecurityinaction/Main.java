@@ -14,8 +14,11 @@ public class Main {
         // first populate the schema with elevated permissions
         createTables(Database.forDataSource(JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter", "password")));
 
+        var port = (args.length > 0) ? Integer.parseInt(args[0]) : null;
         // now create a new datasource with restricted user
-        new WebApp(Database.forDataSource(JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter_api_user", "password"))).init();
+        new WebApp(Database.forDataSource(JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter_api_user", "password")),
+                port)
+                .init();
     }
 
     private static void createTables(Database database) throws URISyntaxException, IOException {
@@ -23,3 +26,4 @@ public class Main {
         database.update(Files.readString(schema));
     }
 }
+                                                           

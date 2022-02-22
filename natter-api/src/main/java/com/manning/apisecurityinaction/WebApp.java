@@ -11,6 +11,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
+import spark.Service;
 import spark.Spark;
 
 import com.manning.apisecurityinaction.controllers.SpaceController;
@@ -22,13 +23,20 @@ import org.dalesbred.Database;
  */
 public class WebApp {
     private final Database database;
+    private final int port;
 
     public WebApp(Database database) {
+        // listen on the default port 4567
+        this(database, null);
+    }
+
+    public WebApp(Database database, Integer port) {
         this.database = database;
+        this.port = port == null? spark.Service.SPARK_DEFAULT_PORT : port;
     }
 
     private void setupRateLimiting(int maxRequestsPerSecond) {
-
+        Spark.port(port);
         // server the development site over HTTPS
         // - the certificate was generated via mkcert tool: https://github.com/FiloSottile/mkcert
         //       mkcert -pkcs12 localhost

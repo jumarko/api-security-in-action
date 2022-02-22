@@ -23,10 +23,11 @@
   <name>natter-api</name>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.17</maven.compiler.source>
     <maven.compiler.target>1.17</maven.compiler.target>
-        <exec.mainClass>
+     <exec.mainClass>
       com.manning.apisecurityinaction.Main
-    </exec.mainClass>
+     </exec.mainClass>
   </properties>
 
   <dependencies>

@@ -17,6 +17,8 @@ import spark.Spark;
 import com.manning.apisecurityinaction.controllers.SpaceController;
 import org.dalesbred.Database;
 
+import java.util.Set;
+
 /**
  * The main entry point that sets up the routes
  * Notice that in the book this is all in the Main class.
@@ -52,6 +54,10 @@ public class WebApp {
         }));
     }
 
+    private void setupCors() {
+        Spark.before(new CorsFilter(Set.of("https://localhost:9999")));
+    }
+
     public void init() {
 
         // serve static files like nater.js & natter.html saved in src/main/resources/public
@@ -59,6 +65,7 @@ public class WebApp {
         Spark.staticFiles.location("/public");
 
         setupRateLimiting(5);
+        setupCors();
 
         var spaceController = new SpaceController(database);
 

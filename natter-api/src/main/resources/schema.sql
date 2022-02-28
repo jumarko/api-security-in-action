@@ -50,3 +50,12 @@ CREATE TABLE permissions(
     PRIMARY KEY (space_id, user_id)
 );
 GRANT SELECT, INSERT ON permissions TO natter_api_user;
+
+CREATE TABLE tokens(
+    token_id VARCHAR(100) PRIMARY KEY,
+    user_id VARCHAR(30) NOT NULL,
+    expiry TIMESTAMP  NOT NULL,
+    -- attributes are a JSON text
+    attributes VARCHAR(4096) NOT NULL
+)
+GRANT SELECT, INSERT, DELETEvl ON tokens TO natter_api_user;

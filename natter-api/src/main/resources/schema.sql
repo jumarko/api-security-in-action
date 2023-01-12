@@ -57,5 +57,5 @@ CREATE TABLE tokens(
     expiry TIMESTAMP  NOT NULL,
     -- attributes are a JSON text
     attributes VARCHAR(4096) NOT NULL
-)
-GRANT SELECT, INSERT, DELETEvl ON tokens TO natter_api_user;
+);
+GRANT SELECT, INSERT, DELETE ON tokens TO natter_api_user;

@@ -32,11 +32,10 @@ public class TokenController {
 
 
     public void validateToken(Request request, Response response) {
-        var tokenId = request.headers("Authorization");
-        if (tokenId == null || tokenId.startsWith("Bearer ")) {
+        var tokenId = parseTokenId(request);
+        if (tokenId == null) {
             return;
         }
-        tokenId = tokenId.substring(7);
         tokenStore.read(request, tokenId).ifPresent(token -> {
             if (Instant.now().isBefore(token.expiry())) {
                 request.attribute("subject", token.username());
@@ -62,15 +61,19 @@ public class TokenController {
     }
 
     public JSONObject logout(Request request, Response response) {
-        // note that in the book they named this `tokenId` too - that was confusin
-        // and they had to mutate it below
-        final var authHeader = request.headers("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer")) {
+        var tokenId = parseTokenId(request);
+        if (tokenId == null) {
             throw new IllegalArgumentException("Missing token header");
         }
-        var tokenId = authHeader.substring(7);
         tokenStore.revoke(request, tokenId);
         response.status(200);
         return new JSONObject();
+    }
+
+    private static String parseTokenId(Request request) {
+        // note that in the book they named this `tokenId` too - that was confusing
+        // and they had to mutate it below
+        var authHeader = request.headers("Authorization");
+        return (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
     }
 }

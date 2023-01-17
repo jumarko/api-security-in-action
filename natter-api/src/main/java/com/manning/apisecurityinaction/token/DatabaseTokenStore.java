@@ -7,6 +7,8 @@ import java.security.SecureRandom;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Simple implementation of TokenStore storing token attributes in session cookies.
@@ -19,6 +21,11 @@ public class DatabaseTokenStore implements TokenStore {
     public DatabaseTokenStore(Database database) {
         this.database = database;
         this.secureRandom = new SecureRandom();
+        scheduleTokenCleanup();
+    }
+
+    private void scheduleTokenCleanup() {
+        Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(this::deleteExpiredTokens, 10, 10, TimeUnit.MINUTES);
     }
 
     // generate unguessable ID
@@ -62,5 +69,12 @@ public class DatabaseTokenStore implements TokenStore {
     public void revoke(Request request, String tokenId) {
         database.update("DELETE FROM tokens WHERE token_id=?", tokenId);
     }
-
+    
+    /**
+     * To avoid the tokens table growing out of bounds and mitigate DoS attacks
+     * we perform regularly cleanup.
+     */
+    public void deleteExpiredTokens() {
+        database.update("DELETE FROM tokens WHERE expiry < current_timestamp");
+    }
 }

@@ -5,13 +5,12 @@ import com.manning.apisecurityinaction.controllers.AuditController;
 import com.manning.apisecurityinaction.controllers.ModeratorController;
 import com.manning.apisecurityinaction.controllers.TokenController;
 import com.manning.apisecurityinaction.controllers.UserController;
-import com.manning.apisecurityinaction.token.CookieTokenStore;
+import com.manning.apisecurityinaction.token.DatabaseTokenStore;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
-import spark.Service;
 import spark.Spark;
 
 import com.manning.apisecurityinaction.controllers.SpaceController;
@@ -70,8 +69,10 @@ public class WebApp {
         var spaceController = new SpaceController(database);
 
         var userController = new UserController(database);
-        
-        var tokenController = new TokenController(new CookieTokenStore());
+
+        // chapter 5: replace CookieTokenStore with DatabaseTokenStore
+        // var tokenController = new TokenController(new CookieTokenStore());
+        var tokenController = new TokenController(new DatabaseTokenStore(database));
 
         // authentication
         Spark.before(userController::authenticate);

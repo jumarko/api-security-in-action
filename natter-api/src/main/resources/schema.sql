@@ -59,3 +59,6 @@ CREATE TABLE tokens(
     attributes VARCHAR(4096) NOT NULL
 );
 GRANT SELECT, INSERT, DELETE ON tokens TO natter_api_user;
+
+-- to make sure regular cleanup of old tokens can be fast
+CREATE INDEX expired_token_idx ON tokens(expiry);

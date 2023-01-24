@@ -2,17 +2,23 @@ const apiUrl = 'https://localhost:4567'
 
 function createSpace(name, owner) {
   const data = {name, owner};
+
+  // NOT USED since Chapter 5.2.4
   // csrtToken cookie is set upon successful login - see login.js
-  const crsfToken = getCookie("csrfToken");
+  // const token = getCookie("csrfToken");
+  const token = localStorage.getItem('token');
 
   fetch(apiUrl  + '/spaces', {
     method: 'POST',
-    credentials: 'include',
+    // Chapter 5.2.4 Stop the browser sending cookies
+    // credentials: 'include',
     body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json',
-      // make sure to include anti-CSRF token in the header
-      'X-CSRF-Token': crsfToken
+      // make sure to include anti-CSRF 4 in the header
+      // Chapter 5.2.4 Stop the browser sending cookies and use 'Authorization' header instead
+      // 'X-CSRF-Token': crsfToken
+      'Authorization': 'Bearer ' + token
     }
   })
     .then(response => {
@@ -41,6 +47,7 @@ function processFormSubmit(e) {
   return false; // prevent further event processing
 }
 
+// NOT USED since Chapter 5.2.4
 function getCookie(cookieName) {
   const cookieValue = document.cookie.split(';')
     .map(item => item.split('=')

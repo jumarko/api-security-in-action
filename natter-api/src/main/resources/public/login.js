@@ -18,7 +18,11 @@ function login(username, password) {
         res.json().then(json => {
           // note that you cannot use 'HttpOnly' cookie because JS needs to store this token in a cookie (for now)
           // but we can still use 'Secure' and 'SameSite'
-          document.cookie = 'csrfToken=' + json.token + ';Secure;SameSite=strict';
+
+          // Chapter 5.2.4 Stop the browser sending cookies
+          // document.cookie = 'csrfToken=' + json.token + ';Secure;SameSite=strict';
+          localStorage.setItem('token', json.token);
+
           // redirect to the main UI after the authentication is completed
           window.location.replace('/natter.html')
         })

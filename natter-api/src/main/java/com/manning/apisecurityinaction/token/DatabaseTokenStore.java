@@ -43,14 +43,15 @@ public class DatabaseTokenStore implements TokenStore {
         var attrs = new JSONObject(token.attributes()).toString();
         database.updateUnique(
                 "INSERT INTO tokens(token_id, user_id, expiry, attributes) VALUES(?, ?, ?, ?)",
-                tokenId, token.username(), token.expiry(), attrs);
+                hash(tokenId), token.username(), token.expiry(), attrs);
         return tokenId;
     }
+
 
     @Override
     public Optional<Token> read(Request request, String tokenId) {
         return database.findOptional(this::readToken,
-                "SELECT user_id, expiry, attributes, FROM tokens WHERE token_id = ?", tokenId);
+                "SELECT user_id, expiry, attributes, FROM tokens WHERE token_id = ?", hash(tokenId));
     }
 
     private Token readToken(ResultSet resultSet) throws SQLException {
@@ -67,7 +68,7 @@ public class DatabaseTokenStore implements TokenStore {
 
     @Override
     public void revoke(Request request, String tokenId) {
-        database.update("DELETE FROM tokens WHERE token_id=?", tokenId);
+        database.update("DELETE FROM tokens WHERE token_id=?", hash(tokenId));
     }
     
     /**
@@ -76,5 +77,10 @@ public class DatabaseTokenStore implements TokenStore {
      */
     public void deleteExpiredTokens() {
         database.update("DELETE FROM tokens WHERE expiry < current_timestamp");
+    }
+
+
+    private static String hash(String tokenId) {
+        return Base64Url.encode(CookieTokenStore.sha256(tokenId));
     }
 }

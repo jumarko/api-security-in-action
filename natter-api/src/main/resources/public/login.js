@@ -7,7 +7,8 @@ function login(username, password) {
   fetch(apiUrl + '/sessions', {
     method: 'POST',
     // we must include credentials to make sure the browser sets cookies for CORS responses
-    credentials: 'include',
+    // UPDATE: chapter 5 uses tokens and we must remove this (p.167)
+    // credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': credentials

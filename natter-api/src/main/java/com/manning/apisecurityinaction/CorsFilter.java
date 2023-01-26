@@ -25,7 +25,8 @@ public class CorsFilter implements Filter {
         var origin = request.headers("Origin");
         if (origin != null && allowedOrigins.contains(origin)) {
             response.header("Access-Control-Allow-Origin", origin);
-            response.header("Access-Control-Allow-Credentials", "true");
+            // Update chapter 5: this is only needed for cookies
+            // response.header("Access-Control-Allow-Credentials", "true");
             response.header("Vary", "origin");
         }
 
@@ -36,7 +37,9 @@ public class CorsFilter implements Filter {
                 Spark.halt(403);
             }
 
-            response.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token");
+            // Update chapter 5: no need for whitelisting X-CSRF-Token anymore since we use tokens
+            // response.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token");
+            response.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
             response.header("Access-Control-Allow-Methods", "GET, POST, DELETE");
             // Again, CORS doesn't prescribe a status code but it's common to return 204
             Spark.halt(204);

@@ -5,11 +5,13 @@ function logout() {
 
   fetch(apiUrl  + '/sessions', {
     method: 'DELETE',
-    credentials: 'include',
+    // UPDATE: chapter 5 uses tokens and we must remove this (p.167)
+    // credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       // make sure to include anti-CSRF token in the header
-      'X-CSRF-Token': crsfToken
+      // Chapter 5: not using cookies for authentication anymore
+      // 'X-CSRF-Token': crsfToken
     }
   })
     .then(response => {

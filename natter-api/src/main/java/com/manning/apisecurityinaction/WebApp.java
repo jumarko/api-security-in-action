@@ -6,6 +6,7 @@ import com.manning.apisecurityinaction.controllers.ModeratorController;
 import com.manning.apisecurityinaction.controllers.TokenController;
 import com.manning.apisecurityinaction.controllers.UserController;
 import com.manning.apisecurityinaction.token.DatabaseTokenStore;
+import com.manning.apisecurityinaction.token.HmacTokenStore;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,6 +17,14 @@ import spark.Spark;
 import com.manning.apisecurityinaction.controllers.SpaceController;
 import org.dalesbred.Database;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.Set;
 
 /**
@@ -57,7 +66,7 @@ public class WebApp {
         Spark.before(new CorsFilter(Set.of("https://localhost:9999")));
     }
 
-    public void init() {
+    public void init() throws UnrecoverableKeyException, CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException {
 
         // serve static files like nater.js & natter.html saved in src/main/resources/public
         // this must be done before any route mapping has begun 
@@ -72,7 +81,8 @@ public class WebApp {
 
         // chapter 5: replace CookieTokenStore with DatabaseTokenStore
         // var tokenController = new TokenController(new CookieTokenStore());
-        var tokenController = new TokenController(new DatabaseTokenStore(database));
+        var tokenStore = new HmacTokenStore(new DatabaseTokenStore(database), getHmacSecretKey());
+        var tokenController = new TokenController(tokenStore);
 
         // authentication
         Spark.before(userController::authenticate);
@@ -137,6 +147,13 @@ public class WebApp {
             response.header("Cache-Control", "no-store");
             response.header("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; sandbox");
         }));
+    }
+
+    private static Key getHmacSecretKey() throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException {
+        var keyPassword = System.getProperty("keystore.password", "changeit").toCharArray();
+        var keyStore = KeyStore.getInstance("PKCS12");
+        keyStore.load(new FileInputStream("keystore.p12"), keyPassword);
+        return keyStore.getKey("hmac-key", keyPassword);
     }
 
     private static <T extends Exception> void badRequest(Exception e, Request request, Response response) {

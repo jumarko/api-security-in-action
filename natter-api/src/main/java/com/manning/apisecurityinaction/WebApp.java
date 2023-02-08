@@ -7,6 +7,8 @@ import com.manning.apisecurityinaction.controllers.TokenController;
 import com.manning.apisecurityinaction.controllers.UserController;
 import com.manning.apisecurityinaction.token.DatabaseTokenStore;
 import com.manning.apisecurityinaction.token.HmacTokenStore;
+import com.manning.apisecurityinaction.token.JsonTokenStore;
+import com.manning.apisecurityinaction.token.TokenStore;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -81,7 +83,11 @@ public class WebApp {
 
         // chapter 5: replace CookieTokenStore with DatabaseTokenStore
         // var tokenController = new TokenController(new CookieTokenStore());
-        var tokenStore = new HmacTokenStore(new DatabaseTokenStore(database), getHmacSecretKey());
+
+        // Chapter 6: replace DatabaseTokenStore with JsonTokenStore
+        // var tokenStore = new HmacTokenStore(new DatabaseTokenStore(database), getHmacSecretKey());
+        var tokenStore = new HmacTokenStore(new JsonTokenStore(), getHmacSecretKey());
+
         var tokenController = new TokenController(tokenStore);
 
         // authentication

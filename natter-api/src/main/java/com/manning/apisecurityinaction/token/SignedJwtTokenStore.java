@@ -7,11 +7,14 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.proc.BadJWTException;
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import spark.Request;
 
 import java.sql.Date;
 import java.text.ParseException;
 import java.util.Optional;
+import java.util.Set;
 
 public class SignedJwtTokenStore implements TokenStore {
 
@@ -52,19 +55,29 @@ public class SignedJwtTokenStore implements TokenStore {
         try {
             // first parse the Compact Serialization Format
             var jwt = SignedJWT.parse(tokenId);
+
+            // verify JWT's signature
             if (!jwt.verify(this.verifier)) {
                 throw new JOSEException("Invalid signature");
             }
+
+            // check audience
             var claims = jwt.getJWTClaimsSet();
             if (!claims.getAudience().contains(this.audience)) {
                 throw new JOSEException("Incorrect audience");
             }
 
+            // check expiration time - NOTE: this isn't in the book!
+            // Notice that this also checks audience
+            // See https://www.javadoc.io/doc/com.nimbusds/nimbus-jose-jwt/latest/com/nimbusds/jwt/proc/DefaultJWTClaimsVerifier.html
+            var claimsVerifier = new DefaultJWTClaimsVerifier<>(this.audience, null, Set.of("exp"));
+            claimsVerifier.verify(claims, null);
+
             var token = new Token(claims.getExpirationTime().toInstant(), claims.getSubject());
             var attrs = claims.getJSONObjectClaim("attrs");
             attrs.forEach((k,v) -> token.attributes().put(k, (String) v));
             return Optional.of(token);
-        } catch (ParseException | JOSEException e) {
+        } catch (ParseException | JOSEException | BadJWTException e) {
             return Optional.empty();
         }
     }

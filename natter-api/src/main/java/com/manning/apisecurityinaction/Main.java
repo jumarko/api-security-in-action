@@ -1,5 +1,6 @@
 package com.manning.apisecurityinaction;
 
+import com.nimbusds.jose.JOSEException;
 import org.dalesbred.Database;
 import org.h2.jdbcx.JdbcConnectionPool;
 
@@ -14,7 +15,7 @@ import java.security.cert.CertificateException;
 
 public class Main {
 
-    public static void main(String[] args) throws URISyntaxException, IOException, UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException {
+    public static void main(String[] args) throws URISyntaxException, IOException, UnrecoverableKeyException, CertificateException, KeyStoreException, NoSuchAlgorithmException, JOSEException {
         // first populate the schema with elevated permissions
         createTables(Database.forDataSource(JdbcConnectionPool.create("jdbc:h2:mem:natter", "natter", "password")));
 

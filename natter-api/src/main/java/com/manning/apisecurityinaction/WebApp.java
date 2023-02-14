@@ -8,7 +8,14 @@ import com.manning.apisecurityinaction.controllers.UserController;
 import com.manning.apisecurityinaction.token.DatabaseTokenStore;
 import com.manning.apisecurityinaction.token.HmacTokenStore;
 import com.manning.apisecurityinaction.token.JsonTokenStore;
+import com.manning.apisecurityinaction.token.SignedJwtTokenStore;
 import com.manning.apisecurityinaction.token.TokenStore;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,6 +35,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.Set;
+
+import javax.crypto.SecretKey;
 
 /**
  * The main entry point that sets up the routes
@@ -68,7 +77,7 @@ public class WebApp {
         Spark.before(new CorsFilter(Set.of("https://localhost:9999")));
     }
 
-    public void init() throws UnrecoverableKeyException, CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException {
+    public void init() throws UnrecoverableKeyException, CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException, JOSEException {
 
         // serve static files like nater.js & natter.html saved in src/main/resources/public
         // this must be done before any route mapping has begun 
@@ -86,7 +95,13 @@ public class WebApp {
 
         // Chapter 6: replace DatabaseTokenStore with JsonTokenStore
         // var tokenStore = new HmacTokenStore(new DatabaseTokenStore(database), getHmacSecretKey());
-        var tokenStore = new HmacTokenStore(new JsonTokenStore(), getHmacSecretKey());
+        // var tokenStore = new HmacTokenStore(new JsonTokenStore(), getHmacSecretKey());
+
+        // Chapter 6.2: replace JsonTokenStore with SignedJwtTokenStore
+        var macKey = getHmacSecretKey();
+        var signer = new MACSigner((SecretKey) macKey);
+        var verifier = new MACVerifier((SecretKey) macKey);
+        var tokenStore = new SignedJwtTokenStore(signer, verifier, JWSAlgorithm.HS256, "https://localhost:4567");
 
         var tokenController = new TokenController(tokenStore);
 

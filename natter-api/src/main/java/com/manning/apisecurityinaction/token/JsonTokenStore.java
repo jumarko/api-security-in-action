@@ -8,6 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Optional;
 
+/**
+ * JsonTokenStore is completely insecure on its own, therefore it only implements TokenStore interface.
+ */
 public class JsonTokenStore implements TokenStore {
     @Override
     public String create(Request request, Token token) {

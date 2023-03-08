@@ -10,12 +10,29 @@ import java.util.Optional;
 
 import javax.crypto.Mac;
 
-public class HmacTokenStore implements TokenStore {
+/**
+ * HmacTokenStore is a delegating TokenStore implementation
+ * which turns any token store into an _authenticated_ token store.
+ *
+ * If the delegate is already confidential, then the result is SecureTokenStore,
+ * otherwise it's AuthenticatedTokenStore.
+ * That's why the constructor is private and we offer two factory methods instead.
+ * The class itself must implement SecureTokenStore otherwise the types wouldn't match.
+ */
+public class HmacTokenStore implements SecureTokenStore {
 
     private final TokenStore delegate;
     private final Key macKey;
 
-    public HmacTokenStore(TokenStore delegate, Key macKey) {
+    public static SecureTokenStore wrap(ConfidentialTokenStore store, Key macKey) {
+        return new HmacTokenStore(store, macKey);
+    }
+
+    public static AuthenticatedTokenStore wrap(AuthenticatedTokenStore store, Key macKey) {
+        return new HmacTokenStore(store, macKey);
+    }
+
+    private HmacTokenStore(TokenStore delegate, Key macKey) {
         this.delegate = delegate;
         this.macKey = macKey;
     }

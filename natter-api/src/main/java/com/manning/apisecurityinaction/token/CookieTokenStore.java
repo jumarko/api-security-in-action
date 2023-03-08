@@ -10,8 +10,9 @@ import java.util.Optional;
 
 /**
  * Simple implementation of TokenStore storing token attributes in session cookies.
+ * CookieTokenStore is secure by design and therefore it implements {@link SecureTokenStore}.
  */
-public class CookieTokenStore implements TokenStore {
+public class CookieTokenStore implements SecureTokenStore {
 
     @Override
     public String create(Request request, Token token) {

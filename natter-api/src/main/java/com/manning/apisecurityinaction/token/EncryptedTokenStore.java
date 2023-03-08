@@ -6,7 +6,11 @@ import spark.Request;
 import java.security.Key;
 import java.util.Optional;
 
-public class EncryptedTokenStore implements TokenStore {
+/**
+ * Token store implementation using encryption key to encrypt tokens via SecretBox.
+ * Secret box provides _authenticated_ encryption so this implements {@link SecureTokenStore}.
+ */
+public class EncryptedTokenStore implements SecureTokenStore {
 
     private final TokenStore delegate;
     private final Key encryptionKey;

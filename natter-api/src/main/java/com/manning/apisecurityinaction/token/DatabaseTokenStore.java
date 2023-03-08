@@ -12,8 +12,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Simple implementation of TokenStore storing token attributes in session cookies.
+ * DatabaseTokenStore is hardened enough thus it implements {@link SecureTokenStore}.
  */
-public class DatabaseTokenStore implements TokenStore {
+public class DatabaseTokenStore implements SecureTokenStore {
 
     private final Database database;
     private final SecureRandom secureRandom;

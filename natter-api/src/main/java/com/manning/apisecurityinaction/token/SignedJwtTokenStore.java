@@ -16,7 +16,11 @@ import java.text.ParseException;
 import java.util.Optional;
 import java.util.Set;
 
-public class SignedJwtTokenStore implements TokenStore {
+/**
+ * TokenStore implementation using Signed JWT tokens stored on the client.
+ * It doesn't provide confidentiality out of the box thus it only implements {@link AuthenticatedTokenStore}.
+ */
+public class SignedJwtTokenStore implements AuthenticatedTokenStore {
 
     private final JWSSigner signer;
     private final JWSVerifier verifier;

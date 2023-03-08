@@ -18,7 +18,11 @@ import java.util.Set;
 
 import javax.crypto.SecretKey;
 
-public class EncryptedJwtTokenStore implements TokenStore {
+/**
+ * Token store implementation using encrypted JWT tokens stored on the client.
+ * Normal JWTs are authenticated + encryption => SecureTokenStore.
+ */
+public class EncryptedJwtTokenStore implements SecureTokenStore {
 
     // expected JWT audience
     private static final String AUD = "https://localhost:4567";

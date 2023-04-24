@@ -4,11 +4,13 @@ import static spark.Spark.halt;
 
 import com.manning.apisecurityinaction.token.TokenStore;
 import org.json.JSONObject;
+import spark.Filter;
 import spark.Request;
 import spark.Response;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 /**
  * Implements a basic /sessions handler.
@@ -23,6 +25,8 @@ import java.time.temporal.ChronoUnit;
  * and putting TokenController after the existing authenticadtion filters.
  */
 public class TokenController {
+
+    private static final String DEFAULT_SCOPES = "create_space post_message read_message list_messages delete_message add_member";
 
     private final TokenStore tokenStore;
 
@@ -54,6 +58,11 @@ public class TokenController {
         String subject = request.attribute("subject");
         var expiry = Instant.now().plus(10, ChronoUnit.MINUTES);
         var token = new TokenStore.Token(expiry, subject);
+
+        // Ch7: add scopes
+        var scope = request.queryParamOrDefault("scope", DEFAULT_SCOPES);
+        token.attributes().put("scope", scope);
+
         var tokenId = tokenStore.create(request, token);
 
         response.status(201);
@@ -68,6 +77,28 @@ public class TokenController {
         tokenStore.revoke(request, tokenId);
         response.status(200);
         return new JSONObject();
+    }
+
+    public Filter requireScope(String method, String requiredScope) {
+        return (request, response) -> {
+            // check that the request method matches the intended method for this scope
+            if (!method.equalsIgnoreCase(request.requestMethod())) {
+                return;
+            }
+
+            // remember: the token validation code copies all the token's attributes from the token to the request
+            // - see `validateToken` method.
+            var tokenScope = request.<String>attribute("scope");
+
+            // if no scope, then it's Basic authentication and we can skip the scope check.
+            if (tokenScope == null) return;
+
+            // if missing the required scope, return standard insufficient_scope error defined in the Bearer auth spec.
+            if (!Set.of(tokenScope.split(" ")).contains(requiredScope)) {
+                response.header("WWW-Authenticate", "Bearer error=\"insufficient_scope\",scope=\"" + requiredScope + "\"");
+                halt(403);
+            }
+        };
     }
 
     private static String parseTokenId(Request request) {

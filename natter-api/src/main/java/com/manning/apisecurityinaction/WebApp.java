@@ -118,30 +118,45 @@ public class WebApp {
         Spark.get("/logs", auditController::readAuditLog);
 
         Spark.before("/sessions", userController::requireAuthentication);
+        // CH7: add scopes - login endpoint requires full_access to prevent privilege escalation
+        Spark.before("/sessions", tokenController.requireScope("POST", "full_access"));
         Spark.post("/sessions", tokenController::login);
+        // CH7 NOTE: logout endpoint doesn't require any scopes
         Spark.delete("/sessions", tokenController::logout);
 
         // require authentication for all /spaces requests          
         Spark.before("/spaces", userController::requireAuthentication);
+        // CH7: add scopes
+        Spark.before("/spaces", tokenController.requireScope("POST", "create_space"));
         Spark.post("/spaces", spaceController::createSpace);
         // only users with write permission can post messages
         Spark.before("/spaces/:spaceId/messages", userController.requirePermissions("POST", "w"));
+        // CH7: add scopes
+        Spark.before("/spaces/*/messages", tokenController.requireScope("POST", "post_message"));
         Spark.post("/spaces/:spaceId/messages", spaceController::postMessage);
 
         // only users with read permissions can read messages
         Spark.before("/spaces/:spaceId/messages", userController.requirePermissions("GET", "r"));
+        // CH7: add scopes
+        Spark.before("/spaces/*/messages", tokenController.requireScope("GET", "list_messages"));
         Spark.get("/spaces/:spaceId/messages/:msgId", spaceController::readMessage);
+        // CH7: add scopes
+        Spark.before("/spaces/*/messages/*", tokenController.requireScope("GET", "read_message"));
         Spark.before("/spaces/:spaceId/messages/*", userController.requirePermissions("GET", "r"));
         Spark.get("/spaces/:spaceId/messages", spaceController::findMessages);
 
         var moderatorController = new ModeratorController(database);
         Spark.before("/spaces/:spaceId/messages/:msgId", userController.requirePermissions("DELETE", "d"));
-        Spark.delete("/spaces/:spaceId/messages/:msgId", moderatorController::deletePost);
 
+        Spark.delete("/spaces/:spaceId/messages/:msgId", moderatorController::deletePost);
+        // CH7: add scopes
+        Spark.before("/spaces/*/messages/*", tokenController.requireScope("DELETE", "delete_message"));
         Spark.post("/users", userController::registerUser);
 
         // notice we require 'rwd' permissions to avoid _privilege escalation_ attacks
         Spark.before("/spaces/:spaceId/members", userController.requirePermissions("POST", "rwd"));
+        // CH7: add scopes
+        Spark.before("/spaces/*/members", tokenController.requireScope("POST", "add_member"));
         Spark.post("/spaces/:spaceId/members", spaceController::addMember);
 
 

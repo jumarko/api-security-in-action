@@ -9,6 +9,7 @@ import com.manning.apisecurityinaction.token.DatabaseTokenStore;
 import com.manning.apisecurityinaction.token.EncryptedJwtTokenStore;
 import com.manning.apisecurityinaction.token.EncryptedTokenStore;
 import com.manning.apisecurityinaction.token.JsonTokenStore;
+import com.manning.apisecurityinaction.token.OAuth2TokenStore;
 import com.nimbusds.jose.JOSEException;
 import org.dalesbred.result.EmptyResultException;
 import org.json.JSONException;
@@ -23,6 +24,7 @@ import org.dalesbred.Database;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -104,7 +106,14 @@ public class WebApp {
 
         // chapter 6.3.4 Replacing EncryptedTokenStore with EncryptedJwtTokenStore
         // var tokenStore = new EncryptedTokenStore(new JsonTokenStore(), getEncKey());
-        var tokenStore = new EncryptedJwtTokenStore((SecretKey) getEncKey());
+        // chapter 7.4 - replacing EncryptedJwtTokenStore with OAuth2TokenStore (p. 243)
+        // var tokenStore = new EncryptedJwtTokenStore((SecretKey) getEncKey());
+        var introspectionEndpoint = URI.create("http://as.example.com:8080/oauth2/introspect");
+        // these are the client credentials you defined when configuring ForgeRok OAuth server
+        // - see Applications -> Oauth 2.0 -> Clients: http://as.example.com:8080/XUI/?realm=/#realms/%2F/applications-oauth2
+        var clientId = "test";
+        var clientSecret = "changeit";
+        var tokenStore = new OAuth2TokenStore(introspectionEndpoint, clientId, clientSecret);
 
         var tokenController = new TokenController(tokenStore);
 

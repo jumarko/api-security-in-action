@@ -5,6 +5,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import org.json.JSONObject;
 import spark.Request;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -12,9 +13,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.KeyStore;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.TrustManagerFactory;
 
 /**
  * This is a TokenStore implementation that uses OAuth2 Token Introspection Endpoint
@@ -32,7 +39,12 @@ public class OAuth2TokenStore implements SecureTokenStore {
         var credentials = URLEncoder.encode(clientId, UTF_8) + ":" + URLEncoder.encode(clientSecret, UTF_8);
         this.authorization = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes(UTF_8));
 
-        this.httpClient = HttpClient.newHttpClient();
+        this.httpClient = HttpClient.newBuilder()
+                // use more secure SSL settings (ciphers, etc.)
+                .sslParameters(initSslParams())
+                // trust only AS ca certificate - I DO NOT USE THIS
+                // .sslContext(initTrustStore())
+                .build();
     }
 
     @Override
@@ -94,5 +106,49 @@ public class OAuth2TokenStore implements SecureTokenStore {
     @Override
     public void revoke(Request request, String tokenId) {
         throw new UnsupportedOperationException("Obtain access token from AS!");
+    }
+
+
+    /**
+     * See Mozilla's "Intermediate" recommendations: https://wiki.mozilla.org/Security/Server_Side_TLS
+     */
+    private SSLParameters initSslParams() {
+        var sslParams = new SSLParameters();
+        // you can drop TLSv1.2 if all clients support TLSv1.3
+        sslParams.setProtocols(new String[] {"TLSv1.3", "TLSv1.2"});
+        sslParams.setCipherSuites(new String[] {
+                // TLS 1.3 ciphers
+                "TLS_AES_128_GCM_SHA256",
+                "TLS_AES_256_GCM_SHA384",
+                "TLS_CHACHA20_POLY1305_SHA256",
+                // TLS 1.2 ciphers - those starting with TLS_ECDHE offer "forward secrecy"
+                "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+                "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+                "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+                "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+                "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256",
+                "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256"
+        });
+        sslParams.setUseCipherSuitesOrder(true);
+        sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+        return sslParams;
+    }
+
+    /**
+     * Creates a keystore containing AS' root ca certificate
+     * I'm not using this, just adding it for completeness
+     */
+    private SSLContext initTrustStore() {
+        try {
+            var trustedCerts = KeyStore.getInstance("PKCS12");
+            trustedCerts.load(new FileInputStream("as.example.com.ca.p12"), "changeit".toCharArray());
+            var tmf = TrustManagerFactory.getInstance("PKIX");
+            tmf.init(trustedCerts);
+            var sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, tmf.getTrustManagers(), null);
+            return sslContext;
+        } catch (GeneralSecurityException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

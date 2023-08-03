@@ -108,11 +108,14 @@ public class WebApp {
         // var tokenStore = new EncryptedTokenStore(new JsonTokenStore(), getEncKey());
         // chapter 7.4 - replacing EncryptedJwtTokenStore with OAuth2TokenStore (p. 243)
         // var tokenStore = new EncryptedJwtTokenStore((SecretKey) getEncKey());
-        var introspectionEndpoint = URI.create("http://as.example.com:8080/oauth2/introspect");
-        // these are the client credentials you defined when configuring ForgeRok OAuth server
-        // - see Applications -> Oauth 2.0 -> Clients: http://as.example.com:8080/XUI/?realm=/#realms/%2F/applications-oauth2
-        var clientId = "test";
-        var clientSecret = "changeit";
+        // See HTTP API documentation: https://github.com/ory/hydra#http-api-documentation -> https://www.ory.sh/docs/hydra/reference/api#tag/oAuth2/operation/introspectOAuth2Token 
+        var introspectionEndpoint = URI.create("http://127.0.0.1:4445/admin/oauth2/introspect");
+        // these are the client credentials you defined when configuring OAuth server
+        // - I do not use ForgeRock because it's such a PITA to reconfigure every time I kill it
+        // - Instead, I use hydra: https://www.ory.sh/docs/hydra/5min-tutorial
+        // - NOTE: create a client  capable of "Authorization Code" grant
+        var clientId = "44be63d2-fc23-4256-baab-fc4559ffffc3";
+        var clientSecret = "AILIDtOIvPGGRZij140fVovpeB";
         var tokenStore = new OAuth2TokenStore(introspectionEndpoint, clientId, clientSecret);
 
         var tokenController = new TokenController(tokenStore);

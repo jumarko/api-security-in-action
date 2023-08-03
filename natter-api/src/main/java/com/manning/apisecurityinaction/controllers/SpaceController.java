@@ -25,7 +25,9 @@ public class SpaceController {
      * Permissions are: 'r' for "read", 'w' for "write", 'd' for "delete".
      */
     private void addPermissions(long spaceId, String username, String permissions) {
-        database.updateUnique("INSERT INTO permissions(space_id, user_id, perms) VALUES(?, ?, ?)",
+        // NOTE: the table name was changed in chapter 8.1 to `user_permissions`, instead of former `permissions`
+        // There's still the `permissions` view but we don't want to use that.
+        database.updateUnique("INSERT INTO user_permissions(space_id, user_id, perms) VALUES(?, ?, ?)",
                     spaceId, username, permissions);
     }
 
@@ -42,7 +44,8 @@ public class SpaceController {
         if (spaceName.length() > 255) {
             throw new IllegalArgumentException("space name too long");
         }
-        if (!owner.matches("[a-zA-Z][a-zA-Z0-9]{1,29}")) {
+
+        if (!owner.matches(UserController.USERNAME_PATTERN.pattern())) {
             // note that echoing back the username might not be the best idea - see later in the book
             throw new IllegalArgumentException("invalid username");
         }

@@ -19,7 +19,10 @@ import java.util.regex.Pattern;
  */
 public class UserController {
 
-    private static final Pattern USERNAME_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z0-9]{1,29}");
+    // In the book they use stricter validation but I use Hydra sample server
+    // that uses `foo@bar.com` username
+    // see https://www.ory.sh/docs/hydra/5min-tutorial
+    public static final Pattern USERNAME_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z0-9@.]{1,29}");
     private final Database database;
 
     public UserController(Database database) {

@@ -97,3 +97,4 @@ CREATE VIEW permissions(space_id, user_or_group_id, perms) AS
     SELECT space_id, user_id, perms FROM user_permissions
     UNION ALL
     SELECT space_id, group_id, perms FROM group_permissions;
+GRANT SELECT ON permissions TO natter_api_user;

@@ -125,7 +125,7 @@ public class UserController {
                     queryBuilder.append(" OR user_or_group_id = ?", group);
                 }
             }
-            queryBuilder.append("/");
+            queryBuilder.append(")");
 
             var perms = database.findAll(String.class, queryBuilder.build());
             if (perms.stream().noneMatch(p -> p.contains(permission))) {

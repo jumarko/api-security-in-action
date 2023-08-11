@@ -114,8 +114,8 @@ public class WebApp {
         // - I do not use ForgeRock because it's such a PITA to reconfigure every time I kill it
         // - Instead, I use hydra: https://www.ory.sh/docs/hydra/5min-tutorial
         // - NOTE: create a client  capable of "Authorization Code" grant
-        var clientId = "44be63d2-fc23-4256-baab-fc4559ffffc3";
-        var clientSecret = "AILIDtOIvPGGRZij140fVovpeB";
+        var clientId = "007c5e9d-a29d-43f7-ba9b-ad7cea319719";
+        var clientSecret = "T1XdD-S8oLKY-VCNaVHWnDxyR_";
         var tokenStore = new OAuth2TokenStore(introspectionEndpoint, clientId, clientSecret);
 
         var tokenController = new TokenController(tokenStore);

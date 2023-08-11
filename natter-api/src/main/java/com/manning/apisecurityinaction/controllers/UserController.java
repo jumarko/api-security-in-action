@@ -2,6 +2,7 @@ package com.manning.apisecurityinaction.controllers;
 
 import com.lambdaworks.crypto.SCryptUtil;
 import org.dalesbred.Database;
+import org.dalesbred.query.QueryBuilder;
 import org.json.JSONObject;
 import spark.Filter;
 import spark.Request;
@@ -10,6 +11,7 @@ import spark.Spark;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -75,7 +77,14 @@ public class UserController {
         var hash = database.findOptional(String.class,
                 "SELECT pw_hash FROM users WHERE user_id=?", username);
         if (hash.isPresent() && SCryptUtil.check(password, hash.get())) {
+            // Notice how all information about the user and their groups is collected in the Authentication step
+            // and the access control decisions are made in the separate Authorization step (see requirePermissions)
             request.attribute("subject", username);
+
+            var groups = database.findAll(String.class,
+                    "SELECT DISTINCT group_id FROM group_members WHERE user_id =?",
+                    username);
+            request.attribute("groups", groups);
         }
     }
 
@@ -107,10 +116,19 @@ public class UserController {
             requireAuthentication(request, response);
             var spaceId = Long.parseLong(request.params(":spaceId"));
             var username = request.attribute("subject");
-            var perms = database.findOptional(String.class,
-                    "SELECT perms from permissions WHERE space_id = ? AND user_id = ?",
-                    spaceId, username).orElse("");
-            if (!perms.contains(permission)) {
+            List<String> groups = request.attribute("groups");
+
+            var queryBuilder = new QueryBuilder("SELECT perms from permissions WHERE space_id = ? AND (user_or_group_id = ?",
+                    spaceId, username);
+            if (groups != null) { // TODO: this is needed because TokenController doesn't sets "groups" request attribute yet
+                for (var group : groups) {
+                    queryBuilder.append(" OR user_or_group_id = ?", group);
+                }
+            }
+            queryBuilder.append("/");
+
+            var perms = database.findAll(String.class, queryBuilder.build());
+            if (perms.stream().noneMatch(p -> p.contains(permission))) {
                 Spark.halt(403);
             }
         });

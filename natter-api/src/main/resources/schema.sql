@@ -109,3 +109,11 @@ INSERT INTO role_permissions(role_id, perms)
            ('member', 'rw'),
            ('observer', 'r');
 GRANT SELECT ON role_permissions TO natter_api_user;
+
+CREATE TABLE user_roles(
+    space_id INT NOT NULL REFERENCES spaces(space_id),
+    user_id VARCHAR(30) NOT NULL REFERENCES users(user_id),
+    role_id VARCHAR(30) NOT NULL REFERENCES role_permissions(role_id),
+    -- this restrics 1 user to a single role, for more roles remove this key and define an index instead
+    PRIMARY KEY (space_id, user_id)
+);

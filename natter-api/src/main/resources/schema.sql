@@ -98,3 +98,14 @@ CREATE VIEW permissions(space_id, user_or_group_id, perms) AS
     UNION ALL
     SELECT space_id, group_id, perms FROM group_permissions;
 GRANT SELECT ON permissions TO natter_api_user;
+
+CREATE TABLE role_permissions(
+    role_id VARCHAR(30) NOT NULL PRIMARY KEY,
+    perms VARCHAR(3) NOT NULL
+)
+INSERT INTO role_permissions(role_id, perms)
+    VALUES ('owner', 'rwd'),
+           ('moderator', 'rd'),
+           ('member', 'rw'),
+           ('observer', 'r');
+GRANT SELECT ON role_permissions TO natter_api_user;

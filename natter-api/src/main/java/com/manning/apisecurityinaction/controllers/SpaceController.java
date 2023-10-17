@@ -10,9 +10,12 @@ import spark.utils.StringUtils;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class SpaceController {
+
+    private static final Set<String> DEFINED_ROLES = Set.of("owner", "moderator", "member", "observer");
 
     private final Database database;
 
@@ -64,7 +67,10 @@ public class SpaceController {
                     spaceId, spaceName, owner);
 
             // give full permissions to the space owner
-            addPermissions(spaceId, owner, "rwd");
+            // Chapter 8.1.2 - full permissions replaced with the owner role
+            // addPermissions(spaceId, owner, "rwd");
+            database.updateUnique("INSERT INTO user_roles(space_id, user_id, role_id) " +
+                    "VALUES(?,?,?)", spaceId, owner, "owner");
 
             response.status(201);
             var spaceUri = "/spaces/" + spaceId;
@@ -78,7 +84,6 @@ public class SpaceController {
         var requestJson = new JSONObject(request.body());
         var spaceId = Long.parseLong(request.params(":spaceId"));
         var userToAdd = requestJson.getString("username");
-        var perms = requestJson.getString("permissions");
 
         if (database.findOptional(String.class,
                 "SELECT user_id FROM users WHERE user_id=?", userToAdd)
@@ -86,18 +91,29 @@ public class SpaceController {
             throw new IllegalArgumentException("User does not exist");
         }
 
-        if (StringUtils.isBlank(perms) || !perms.matches("r?w?d?")) {
-            throw new IllegalArgumentException("invalid perissions");
+        // Chapter 8.1.2 - permissions replaced with roles
+        // var perms = requestJson.getString("permissions");
+//        if (StringUtils.isBlank(perms) || !perms.matches("r?w?d?")) {
+//            throw new IllegalArgumentException("invalid perissions");
+//        }
+        var role = requestJson.optString("role", "member"); // default role is "member"
+        if (!DEFINED_ROLES.contains(role)) {
+            throw new IllegalArgumentException("invalid role");
         }
+        database.updateUnique("INSERT INTO user_roles(space_id, user_id, role_id) " +
+                "VALUES(?,?,?)", spaceId, userToAdd, role);
 
         // WARNING: possible privilege escalation attack!
         // It is mitigated by requiring full permissions for calling addMember endpoint
-        addPermissions(spaceId, userToAdd, perms);
+        // Chapter 8.1.2 - permissions replaced with roles
+//        addPermissions(spaceId, userToAdd, perms);
 
         response.status(200);
         return new JSONObject()
                 .put("username", userToAdd)
-                .put("permissions", perms);
+                // Chapter 8.1.2 - permissions replaced with roles
+                // .put("permissions", perms);
+                .put("role", role);
     }
 
     // Additional REST API endpoints not covered in the book:

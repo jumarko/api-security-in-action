@@ -108,29 +108,46 @@ public class UserController {
      * @param permission permission required for the API call to succeed
      * @return the filter that can be applied to specific route and checks permissions
      */
-    public Filter requirePermissions(String method, String permission) {
-        return ((request, response) -> {
+    public void lookupPermissions(Request request, Response response) {
+        requireAuthentication(request, response);
+        var spaceId = Long.parseLong(request.params(":spaceId"));
+        var username = request.attribute("subject");
+        // Chapter 8.2.3 (p. 279/280) - "permissions filter" - get user's permissions once and store them in a request attribute
+        // - this enables us to reuse possibly expensive query multiple times over the same request
+        var perms = database.findOptional(String.class,
+                "SELECT rp.perms FROM role_permissions rp JOIN user_roles ur ON rp.role_id = ur.role_id" +
+                " WHERE ur.space_id = ? AND ur.user_id = ?",
+                spaceId, username).orElse("");
+        request.attribute("perms", perms);
+    }
+
+    public Filter requirePermission(String method, String permission) {
+        return (request, response) -> {
             if (!method.equalsIgnoreCase(request.requestMethod())) {
                 return;
             }
-            requireAuthentication(request, response);
-            var spaceId = Long.parseLong(request.params(":spaceId"));
-            var username = request.attribute("subject");
-            List<String> groups = request.attribute("groups");
 
-            var queryBuilder = new QueryBuilder("SELECT perms from permissions WHERE space_id = ? AND (user_or_group_id = ?",
-                    spaceId, username);
-            if (groups != null) { // TODO: this is needed because TokenController doesn't sets "groups" request attribute yet
-                for (var group : groups) {
-                    queryBuilder.append(" OR user_or_group_id = ?", group);
-                }
-            }
-            queryBuilder.append(")");
 
-            var perms = database.findAll(String.class, queryBuilder.build());
-            if (perms.stream().noneMatch(p -> p.contains(permission))) {
+            /* Older code using groups to determine permissions */
+//            List<String> groups = request.attribute("groups");
+//            var queryBuilder = new QueryBuilder("SELECT perms from permissions WHERE space_id = ? AND (user_or_group_id = ?",
+//                    spaceId, username);
+//            if (groups != null) { // TODO: this is needed because TokenController doesn't sets "groups" request attribute yet
+//                for (var group : groups) {
+//                    queryBuilder.append(" OR user_or_group_id = ?", group);
+//                }
+//            }
+//            queryBuilder.append(")");
+            // var perms = database.findAll(String.class, queryBuilder.build());
+            //  if (perms.stream().noneMatch(p -> p.contains(permission))) {
+            //                Spark.halt(403);
+            //            }
+
+
+            var perms = request.<String>attribute("perms");
+            if (!perms.contains(permission)) {
                 Spark.halt(403);
             }
-        });
+        };
     }
 }

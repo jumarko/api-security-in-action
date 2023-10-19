@@ -102,7 +102,7 @@ GRANT SELECT ON permissions TO natter_api_user;
 CREATE TABLE role_permissions(
     role_id VARCHAR(30) NOT NULL PRIMARY KEY,
     perms VARCHAR(3) NOT NULL
-)
+);
 INSERT INTO role_permissions(role_id, perms)
     VALUES ('owner', 'rwd'),
            ('moderator', 'rd'),

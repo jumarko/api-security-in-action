@@ -138,27 +138,33 @@ public class WebApp {
 
         // require authentication for all /spaces requests          
         Spark.before("/spaces", userController::requireAuthentication);
+
+        // CH 8.3.2 add separate filter lookupPermissions to cache RBAC-based permissions in a request attribute
+        Spark.before("/spaces/:spaceId/messages", userController::lookupPermissions);
+        Spark.before("/spaces/:spaceId/messages/*", userController::lookupPermissions);
+        Spark.before("/spaces/:spaceId/members", userController::lookupPermissions);
+
         // CH7: add scopes
         Spark.before("/spaces", tokenController.requireScope("POST", "create_space"));
         Spark.post("/spaces", spaceController::createSpace);
         // only users with write permission can post messages
-        Spark.before("/spaces/:spaceId/messages", userController.requirePermissions("POST", "w"));
+        Spark.before("/spaces/:spaceId/messages", userController.requirePermission("POST", "w"));
         // CH7: add scopes
         Spark.before("/spaces/*/messages", tokenController.requireScope("POST", "post_message"));
         Spark.post("/spaces/:spaceId/messages", spaceController::postMessage);
 
         // only users with read permissions can read messages
-        Spark.before("/spaces/:spaceId/messages", userController.requirePermissions("GET", "r"));
+        Spark.before("/spaces/:spaceId/messages", userController.requirePermission("GET", "r"));
         // CH7: add scopes
         Spark.before("/spaces/*/messages", tokenController.requireScope("GET", "list_messages"));
         Spark.get("/spaces/:spaceId/messages/:msgId", spaceController::readMessage);
         // CH7: add scopes
         Spark.before("/spaces/*/messages/*", tokenController.requireScope("GET", "read_message"));
-        Spark.before("/spaces/:spaceId/messages/*", userController.requirePermissions("GET", "r"));
+        Spark.before("/spaces/:spaceId/messages/*", userController.requirePermission("GET", "r"));
         Spark.get("/spaces/:spaceId/messages", spaceController::findMessages);
 
         var moderatorController = new ModeratorController(database);
-        Spark.before("/spaces/:spaceId/messages/:msgId", userController.requirePermissions("DELETE", "d"));
+        Spark.before("/spaces/:spaceId/messages/:msgId", userController.requirePermission("DELETE", "d"));
 
         Spark.delete("/spaces/:spaceId/messages/:msgId", moderatorController::deletePost);
         // CH7: add scopes
@@ -166,7 +172,7 @@ public class WebApp {
         Spark.post("/users", userController::registerUser);
 
         // notice we require 'rwd' permissions to avoid _privilege escalation_ attacks
-        Spark.before("/spaces/:spaceId/members", userController.requirePermissions("POST", "rwd"));
+        Spark.before("/spaces/:spaceId/members", userController.requirePermission("POST", "rwd"));
         // CH7: add scopes
         Spark.before("/spaces/*/members", tokenController.requireScope("POST", "add_member"));
         Spark.post("/spaces/:spaceId/members", spaceController::addMember);

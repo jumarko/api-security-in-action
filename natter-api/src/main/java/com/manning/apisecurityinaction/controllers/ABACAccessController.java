@@ -2,6 +2,7 @@ package com.manning.apisecurityinaction.controllers;
 
 import spark.Request;
 import spark.Response;
+import spark.Spark;
 
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -30,6 +31,10 @@ public abstract class ABACAccessController {
         envAttrs.put("ip", request.ip());
 
         var decision = checkPermitted(subjectAttrs, resourceAttrs, actionAttrs, envAttrs);
+
+        if (!decision.isPermitted()) {
+            Spark.halt(403);
+        }
     }
 
 

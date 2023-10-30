@@ -40,7 +40,27 @@ public abstract class ABACAccessController {
         Map<String, Object> envAttrs
     );
 
+    /**
+     * This class is used to combine multiple ABAC policy rules
+     * into the final verdict allow/deny.
+     * The `permit` flag is true by default which means we allow any action
+     * unless there's an explicit 'deny' rule.
+     */
     public static class Decision {
+        // This wil
+        private boolean permit = true;
 
+        public void deny() {
+            this.permit = false;
+        }
+
+        public void permit() {
+            // no action since allow is the default
+            // and if somebody else already denied the action we don't want to allow it again
+        }
+
+        boolean isPermitted() {
+            return this.permit;
+        }
     }
 }

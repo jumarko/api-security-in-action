@@ -30,7 +30,7 @@ public abstract class ABACAccessController {
         // note: this is dummy and doesn't count with proxies like CloudFront (x-forwarded-for)
         envAttrs.put("ip", request.ip());
 
-        var decision = checkPermitted(subjectAttrs, resourceAttrs, actionAttrs, envAttrs);
+        final Decision decision = checkPermitted(subjectAttrs, resourceAttrs, actionAttrs, envAttrs);
 
         if (!decision.isPermitted()) {
             Spark.halt(403);

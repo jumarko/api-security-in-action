@@ -1,0 +1,15 @@
+package com.manning.apisecurityinaction.rules;
+
+// to import Subject, Resource, etc.
+import com.manning.apisecurityinaction.controllers.DroolsAccessController.*;
+import com.manning.apisecurityinaction.controllers.ABACAccessController.Decision;
+
+global Decision decision;
+
+rule "deny moderation outside office hours"
+    when
+        Action( this["method"] == "DELETE" )
+        Environment ( this["timeOfday"].hour < 9 || this["timeOfData"] > 17 )
+    then
+        decision.deny();
+end

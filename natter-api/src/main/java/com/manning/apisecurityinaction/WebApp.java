@@ -2,6 +2,7 @@ package com.manning.apisecurityinaction;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.manning.apisecurityinaction.controllers.AuditController;
+import com.manning.apisecurityinaction.controllers.DroolsAccessController;
 import com.manning.apisecurityinaction.controllers.ModeratorController;
 import com.manning.apisecurityinaction.controllers.TokenController;
 import com.manning.apisecurityinaction.controllers.UserController;
@@ -128,6 +129,10 @@ public class WebApp {
         Spark.before((auditController::auditRequestStart));
         Spark.afterAfter((auditController::auditRequestEnd));
         Spark.get("/logs", auditController::readAuditLog);
+
+        // Ch 8.3.2 (p. 288) - add ABAC access control checks via Drools - see src/main/resources/META-INF/accessrules.drl
+        var droolsController = new DroolsAccessController();
+        Spark.before("/*", droolsController::enforcePolicy);
 
         Spark.before("/sessions", userController::requireAuthentication);
         // CH7: add scopes - login endpoint requires full_access to prevent privilege escalation

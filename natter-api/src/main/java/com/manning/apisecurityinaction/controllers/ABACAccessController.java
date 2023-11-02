@@ -27,6 +27,8 @@ public abstract class ABACAccessController {
 
         var envAttrs = new HashMap<String, Object>();
         envAttrs.put("timeOfDay", LocalTime.now());
+        // use fixed time if you want to test agent's permissions "outside office hours"
+        envAttrs.put("timeOfDay", LocalTime.now().withHour(23));
         // note: this is dummy and doesn't count with proxies like CloudFront (x-forwarded-for)
         envAttrs.put("ip", request.ip());
 

@@ -117,3 +117,4 @@ CREATE TABLE user_roles(
     -- this restrics 1 user to a single role, for more roles remove this key and define an index instead
     PRIMARY KEY (space_id, user_id)
 );
+GRANT SELECT, INSERT, DELETE ON user_roles TO natter_api_user;

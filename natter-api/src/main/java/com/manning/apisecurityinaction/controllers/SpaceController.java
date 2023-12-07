@@ -5,9 +5,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import spark.Request;
 import spark.Response;
-import spark.utils.StringUtils;
 
-import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
@@ -18,9 +17,15 @@ public class SpaceController {
     private static final Set<String> DEFINED_ROLES = Set.of("owner", "moderator", "member", "observer");
 
     private final Database database;
+    private final CapabilityController capabilityController;
 
     public SpaceController(Database database) {
+        this(database, null);
+    }
+
+    public SpaceController(Database database, CapabilityController capabilityController) {
         this.database = database;
+        this.capabilityController = capabilityController;
     }
 
     /**
@@ -53,7 +58,7 @@ public class SpaceController {
             throw new IllegalArgumentException("invalid username");
         }
 
-        // my custom additon for better error message in the browser
+        // my custom addition for better error message in the browser
         var space = database.findOptional(String.class, "SELECT name from spaces WHERE name = ?", spaceName);
         if (space.isPresent()) {
             throw new IllegalArgumentException("Space already exists! You must provide a unique space name");
@@ -69,13 +74,28 @@ public class SpaceController {
             // give full permissions to the space owner
             // Chapter 8.1.2 - full permissions replaced with the owner role
             // addPermissions(spaceId, owner, "rwd");
-            database.updateUnique("INSERT INTO user_roles(space_id, user_id, role_id) " +
-                    "VALUES(?,?,?)", spaceId, owner, "owner");
+
+            // Chapter 9.2.2 (p. 305/6) - Capability URIs
+            // - no need to insert into user_roles anymore because we will be using capabilities for access control
+//            database.updateUnique("INSERT INTO user_roles(space_id, user_id, role_id) " +
+//                    "VALUES(?,?,?)", spaceId, owner, "owner");
+            var spaceUri = "/spaces/" + spaceId;
+            var expiry = Duration.ofDays(1000000); // very long duration as the URI is the only way to access the space from now on
+            var uri = capabilityController.createURI(request, spaceUri, "rwd", expiry);
+
+            // ch 9.2.3 (p. 308/9) - returning more capability URIs to allow the client to access rome real space resources like messages
+            var messagesUri = capabilityController.createURI(request, spaceUri + "/messages", "rwd", expiry);
+            var messagesReadWriteUri = capabilityController.createURI(request, spaceUri + "/messages", "rw", expiry);
+            var messagesReadOnlyUri = capabilityController.createURI(request, spaceUri + "/messages", "rw", expiry);
 
             response.status(201);
-            var spaceUri = "/spaces/" + spaceId;
-            response.header("Location", spaceUri);
-            return new JSONObject().put("name", spaceName).put("uri", spaceUri);
+            response.header("Location", uri.toASCIIString());
+            return new JSONObject()
+                    .put("name", spaceName)
+                    .put("uri", uri)
+                    .put("messages-rwd", messagesUri)
+                    .put("messages-rw", messagesReadWriteUri)
+                    .put("messages-r", messagesReadOnlyUri);
         });
 
     }

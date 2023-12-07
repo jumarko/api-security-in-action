@@ -2,6 +2,7 @@ package com.manning.apisecurityinaction;
 
 import com.google.common.util.concurrent.RateLimiter;
 import com.manning.apisecurityinaction.controllers.AuditController;
+import com.manning.apisecurityinaction.controllers.CapabilityController;
 import com.manning.apisecurityinaction.controllers.DroolsAccessController;
 import com.manning.apisecurityinaction.controllers.ModeratorController;
 import com.manning.apisecurityinaction.controllers.TokenController;
@@ -84,7 +85,11 @@ public class WebApp {
         setupRateLimiting(5);
         setupCors();
 
-        var spaceController = new SpaceController(database);
+        // ch9 (p. 304) - CapabilityController
+        var capabilityController = new CapabilityController(new DatabaseTokenStore(database));
+        // var spaceController = new SpaceController(database);
+        // we'll use space controller to create capability URIs
+        var spaceController = new SpaceController(database, capabilityController);
 
         var userController = new UserController(database);
 
@@ -145,9 +150,13 @@ public class WebApp {
         Spark.before("/spaces", userController::requireAuthentication);
 
         // CH 8.3.2 add separate filter lookupPermissions to cache RBAC-based permissions in a request attribute
-        Spark.before("/spaces/:spaceId/messages", userController::lookupPermissions);
-        Spark.before("/spaces/:spaceId/messages/*", userController::lookupPermissions);
-        Spark.before("/spaces/:spaceId/members", userController::lookupPermissions);
+        // Ch 9.2.2 replace userController with capabilityController
+//        Spark.before("/spaces/:spaceId/messages", userController::lookupPermissions);
+//        Spark.before("/spaces/:spaceId/messages/*", userController::lookupPermissions);
+//        Spark.before("/spaces/:spaceId/members", userController::lookupPermissions);
+        Spark.before("/spaces/:spaceId/messages", capabilityController::lookupPermissions);
+        Spark.before("/spaces/:spaceId/messages/*", capabilityController::lookupPermissions);
+        Spark.before("/spaces/:spaceId/members", capabilityController::lookupPermissions);
 
         // CH7: add scopes
         Spark.before("/spaces", tokenController.requireScope("POST", "create_space"));

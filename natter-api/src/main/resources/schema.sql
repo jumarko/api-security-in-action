@@ -53,7 +53,8 @@ GRANT SELECT, INSERT ON permissions TO natter_api_user;
 
 CREATE TABLE tokens(
     token_id VARCHAR(100) PRIMARY KEY,
-    user_id VARCHAR(30) NOT NULL,
+    -- NOT NULL constraint removed in Chapter 9 (p. 305) to support capability-based URIs/tokens
+    user_id VARCHAR(30),
     expiry TIMESTAMP  NOT NULL,
     -- attributes are a JSON text
     attributes VARCHAR(4096) NOT NULL
@@ -72,6 +73,7 @@ CREATE TABLE group_members(
     group_id VARCHAR(30) NOT NULL REFERENCES groups(group_id),
     user_id VARCHAR(30) NOT NULL REFERENCES users(user_id));
 CREATE INDEX group_member_user_idx ON group_members(user_id);
+GRANT SELECT, INSERT ON group_members TO natter_api_user;
 CREATE TABLE user_permissions(
     space_id INT NOT NULL REFERENCES spaces(space_id),
     user_id VARCHAR(30) NOT NULL REFERENCES users(user_id),

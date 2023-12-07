@@ -83,9 +83,19 @@ public class SpaceController {
             var expiry = Duration.ofDays(1000000); // very long duration as the URI is the only way to access the space from now on
             var uri = capabilityController.createURI(request, spaceUri, "rwd", expiry);
 
+            // ch 9.2.3 (p. 308/9) - returning more capability URIs to allow the client to access rome real space resources like messages
+            var messagesUri = capabilityController.createURI(request, spaceUri + "/messages", "rwd", expiry);
+            var messagesReadWriteUri = capabilityController.createURI(request, spaceUri + "/messages", "rw", expiry);
+            var messagesReadOnlyUri = capabilityController.createURI(request, spaceUri + "/messages", "rw", expiry);
+
             response.status(201);
             response.header("Location", uri.toASCIIString());
-            return new JSONObject().put("name", spaceName).put("uri", uri);
+            return new JSONObject()
+                    .put("name", spaceName)
+                    .put("uri", uri)
+                    .put("messages-rwd", messagesUri)
+                    .put("messages-rw", messagesReadWriteUri)
+                    .put("messages-r", messagesReadOnlyUri);
         });
 
     }
